@@ -108,6 +108,9 @@ health_check
 /tests/regression/ust/ust-dl/libfoo.so.debug
 /tests/regression/ust/ust-dl/libbar.so.debug
 /tests/regression/ust/ust-dl/libzzz.so.debug
+/tests/utils/testapp/gen-syscall-events-callstack/gen-syscall-events-callstack
+/tests/utils/testapp/gen-ust-events/gen-ust-events
+/tests/utils/testapp/gen-ust-nevents-str/gen-ust-nevents-str
 /tests/utils/testapp/gen-ust-nevents/gen-ust-nevents
 /tests/utils/testapp/gen-ust-tracef/gen-ust-tracef
 /tests/regression/tools/live/live_test
@@ -115,7 +118,6 @@ health_check
 /tests/perf/find_event
 /tests/perf/test_perf_raw
 /tests/unit/test_string_utils
-/tests/utils/testapp/gen-ust-nevents-str/gen-ust-nevents-str
 
 # man pages
 /doc/man/*.1
