@@ -553,6 +553,9 @@ int trace_ust_context_type_event_to_ust(
 	case LTTNG_EVENT_CONTEXT_APP_CONTEXT:
 		utype = LTTNG_UST_CONTEXT_APP_CONTEXT;
 		break;
+	case LTTNG_EVENT_CONTEXT_CALLSTACK_USER:
+		utype = LTTNG_UST_CONTEXT_CALLSTACK;
+		break;
 	default:
 		utype = -1;
 		break;
