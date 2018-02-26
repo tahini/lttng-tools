@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Michael Jeanson <mjeanson@efficios.com>
+ *  Copyright (C) 2018 - Geneviève Bastien <gbastien@versatic.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License, version 2 only, as
@@ -15,24 +15,22 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef COLLECTD_THREAD_H
-#define COLLECTD_THREAD_H
+#ifndef UDEV_MONITOR_H
+#define UDEV_MONITOR_H
 
-#include "thread.h"
-#include "register.h"
+#if HAVE_LIBUDEV
 
-#if HAVE_LIBLTTNG_UST_CTL
+void *collectd_thread_monitor_udev(void *data);
 
-bool launch_collectd_thread(struct registration_thread_handle *registration_thread_handle);
-
-#else /* HAVE_LIBLTTNG_UST_CTL */
+#else
 
 static inline
-bool launch_collectd_thread(struct registration_thread_handle *registration_thread_handle)
+void *collectd_thread_monitor_udev(void *data)
 {
-	return true;
+	WARN("[collectd-udev] Not monitoring udev as libudev is not available on the system");
+	return NULL;
 }
 
-#endif /* HAVE_LIBLTTNG_UST_CTL */
+#endif /* HAVE_LIBUDEV */
 
-#endif /* COLLECTD_THREAD_H */
+#endif /* UDEV_MONITOR_H */

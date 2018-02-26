@@ -25,8 +25,11 @@
 
 #include "lttng-collectd.h"
 #include "lttng-collectd-statedump.h"
+#include "udev-monitor.h"
 
 int lttng_opt_quiet, lttng_opt_verbose, lttng_opt_mi;
+
+static pthread_t udev_thread;
 
 /*
  * main
@@ -34,10 +37,11 @@ int lttng_opt_quiet, lttng_opt_verbose, lttng_opt_mi;
 int main(int argc, char **argv)
 {
 	int ret = 0, retval = 0;
-	int i, pollfd, fd_w;
+	int i, pollfd, fd_w, out;
 	uint32_t revents, nb_fd;
 	struct lttng_poll_event events;
 	char *pipe_path = argv[1];
+	void *status;
 	const unsigned char magic = DEFAULT_LTTNG_COLLECTD_MAGIC;
 
 	fd_w = open(pipe_path, O_WRONLY);
@@ -47,8 +51,28 @@ int main(int argc, char **argv)
 		goto exit_open;
 	}
 
+	 out = open("/tmp/cout.log", O_RDWR|O_CREAT|O_APPEND, 0600);
+	 if (-1 == out) {
+		 PERROR("opening cout.log");
+	 }
+	 if (-1 == dup2(out, fileno(stdout))) { PERROR("cannot redirect stdout"); }
+	 if (-1 == dup2(out, fileno(stderr))) { PERROR("cannot redirect stderr"); }
+
 	register_lttng_collectd_statedump_notifier();
 	// TODO: Setup instrumentation here
+
+	WARN("[lttng-collectd] will create the thread");
+	/* Create thread to monitor udev */
+	ret = pthread_create(&udev_thread, default_pthread_attr(),
+			collectd_thread_monitor_udev,
+			NULL);
+	WARN("[lttng-collectd] created thread %d", ret);
+	if (ret) {
+		errno = ret;
+		PERROR("pthread_create");
+		retval = -1;
+		goto exit_udev;
+	}
 
 	/*
 	 * Write the magic byte on the fifo to signal we are ready
@@ -111,6 +135,14 @@ restart:
 	}
 
 exit:
+exit_udev:
+
+	ret = pthread_join(udev_thread, &status);
+	if (ret) {
+		errno = ret;
+		PERROR("pthread_join health_thread");
+		retval = -1;
+	}
 	unregister_lttng_collectd_statedump_notifier();
 exit_open:
 	return retval;
