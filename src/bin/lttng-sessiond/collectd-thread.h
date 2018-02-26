@@ -35,14 +35,13 @@ struct collectd_thread_handle *collectd_thread_handle_create(
 		int thread_quit_pipe,
 		sem_t *registration_thread_ready);
 
-#ifdef HAVE_LIBLTTNG_UST_CTL
+#if HAVE_LIBLTTNG_UST_CTL
 
 void *thread_manage_collectd(void *data);
 
 #else /* HAVE_LIBLTTNG_UST_CTL */
 
-void *thread_manage_collectd(void *data);
-{
+void *thread_manage_collectd(void *data) {
 	return NULL;
 }
 

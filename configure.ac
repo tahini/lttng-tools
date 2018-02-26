@@ -581,6 +581,56 @@ AC_CHECK_LIB([dl], [dlopen],
 )
 AC_SUBST(DL_LIBS)
 
+# Check libudev
+AH_TEMPLATE([HAVE_LIBUDEV], [Define if you have libudev support])
+AC_ARG_WITH([udev],
+  [AS_HELP_STRING([--without-udev], [build without udev monitoring support])],
+  [],
+  [with_udev=yes]
+)
+
+AS_IF([test "x$with_udev" = "xyes" -a "x$with_lttng_ust" = "xyes"],
+  [
+    PKG_CHECK_MODULES([UDEV], [libudev],
+      [
+        dnl PKG_CHECK_MODULES defines UDEV_LIBS
+        AC_DEFINE([HAVE_LIBUDEV], [1])
+      ],
+      [
+            AC_MSG_FAILURE([Cannot find libudev. Specify --without-udev to build lttng-tools without udev monitoring support.])
+      ]
+    )
+  ],
+  AC_DEFINE([HAVE_LIBUDEV], [0])
+)
+AM_CONDITIONAL([HAVE_LIBUDEV], [test "x$with_udev" = "xyes" -a "x$with_lttng_ust" = "xyes"])
+
+
+
+#AH_TEMPLATE([HAVE_LIBUDEV], [Define if you have libudev support])
+#AH_TEMPLATE([HAVE_UDEV_LIB], [Define if you have libudev support])
+#if test "x$with_lttng_ust" = xyes && test "x$enable_bin_lttng_collectd" != "xno"; then
+#	PKG_CHECK_MODULES([UDEV], [libudev],
+#		[
+#		AC_MSG_WARN([Will build with libudev if it works])
+#			
+#			dnl PKG_CHECK_MODULES defines UDEV_LIBS
+#			UDEV_LIBS="-ludev"
+#			HAVE_UDEV_LIB=1
+#		],
+ # 		[
+  #     		AC_MSG_WARN([Cannot find libudev. The udev will not be monitored. Either set PKG_CONFIG_PATH to the configuration file location or use LDFLAGS=-Ldir to specify the library location])
+	#		UDEV_LIBS=""
+	#		HAVE_UDEV_LIB=0
+	#	]
+	#)
+	#AC_SUBST(UDEV_LIBS)
+#else
+#	AC_MSG_NOTICE([To monitor udev, you need to have lttng-ust enabled and build the lttng-collectd binary])
+#	HAVE_UDEV_LIB=0
+#fi
+#AM_CONDITIONAL([HAVE_LIBUDEV], [test "$HAVE_UDEV_LIB" -eq 1])
+
 # Check for fmemopen
 AC_CHECK_LIB([c], [fmemopen],
 [
