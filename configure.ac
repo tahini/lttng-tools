@@ -1194,6 +1194,7 @@ AC_CONFIG_FILES([
 	tests/regression/ust/clock-override/Makefile
 	tests/regression/ust/type-declarations/Makefile
 	tests/regression/ust/rotation-destroy-flush/Makefile
+	tests/regression/ust/statedump-notifier/Makefile
 	tests/regression/ust/blocking/Makefile
 	tests/regression/ust/namespaces/Makefile
 	tests/stress/Makefile
@@ -1211,6 +1212,7 @@ AC_CONFIG_FILES([
 	tests/utils/testapp/gen-ust-nevents/Makefile
 	tests/utils/testapp/gen-ust-nevents-str/Makefile
 	tests/utils/testapp/gen-syscall-events/Makefile
+	tests/utils/testapp/gen-ust-statedump-events/Makefile
 	tests/utils/testapp/gen-ust-tracef/Makefile
 	tests/utils/testapp/userspace-probe-elf-binary/Makefile
 	tests/utils/testapp/userspace-probe-elf-cxx-binary/Makefile

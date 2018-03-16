@@ -61,6 +61,7 @@ TESTS += ust/before-after/test_before_after \
 	ust/rotation-destroy-flush/test_rotation_destroy_flush \
 	ust/namespaces/test_ns_contexts \
 	ust/namespaces/test_ns_contexts_change \
+	ust/statedump-notifier/test_statedump_notifier \
 	tools/metadata/test_ust \
 	tools/relayd-grouping/test_ust
 endif # HAVE_LIBLTTNG_UST_CTL
