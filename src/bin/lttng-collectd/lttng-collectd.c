@@ -24,6 +24,7 @@
 #include <common/compat/poll.h>
 
 #include "lttng-collectd.h"
+#include "lttng-collectd-statedump.h"
 
 int lttng_opt_quiet, lttng_opt_verbose, lttng_opt_mi;
 
@@ -46,6 +47,7 @@ int main(int argc, char **argv)
 		goto exit_open;
 	}
 
+	register_lttng_collectd_statedump_notifier();
 	// TODO: Setup instrumentation here
 
 	/*
@@ -109,7 +111,7 @@ restart:
 	}
 
 exit:
-
+	unregister_lttng_collectd_statedump_notifier();
 exit_open:
 	return retval;
 }
