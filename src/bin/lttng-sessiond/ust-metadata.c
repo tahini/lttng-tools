@@ -25,6 +25,7 @@
 #endif
 
 #define NR_CLOCK_OFFSET_SAMPLES		10
+#define PRODUCT_UUID_LEN	37
 
 struct offset_sample {
 	int64_t offset;			/* correlation offset */
@@ -986,6 +987,27 @@ end:
 	return ret;
 }
 
+static
+int ust_get_product_uuid(char *product_uuid)
+{
+	int ret = 0;
+	FILE *file;
+	size_t len = PRODUCT_UUID_LEN - 1;
+
+	file = fopen("/sys/class/dmi/id/product_uuid", "r");
+	if (!file) {
+		ret = -ENOENT;
+		goto close_file;
+	}
+	if (fread(product_uuid, 1, len, file) != len) {
+		ret = -EIO;
+	}
+
+close_file:
+	fclose(file);
+	return ret;
+}
+
 /*
  * Should be called with session registry mutex held.
  */
@@ -997,6 +1019,8 @@ int ust_metadata_session_statedump(struct ust_registry_session *session,
 	char uuid_s[LTTNG_UUID_STR_LEN],
 		clock_uuid_s[LTTNG_UUID_STR_LEN];
 	int ret = 0;
+	char product_uuid[PRODUCT_UUID_LEN];
+	bool is_root = !getuid();
 
 	assert(session);
 
@@ -1076,6 +1100,18 @@ int ust_metadata_session_statedump(struct ust_registry_session *session,
 	ret = print_metadata_app_information(session, app);
 	if (ret) {
 		goto end;
+	}
+
+	/* Add the product uuid if run as root */
+	if (is_root) {
+		if (!ust_get_product_uuid(product_uuid)) {
+			ret = lttng_metadata_printf(session,
+				"	product_uuid = \"%s\";\n",
+				product_uuid
+				);
+			if (ret)
+				goto end;
+		}
 	}
 
 	ret = lttng_metadata_printf(session,
