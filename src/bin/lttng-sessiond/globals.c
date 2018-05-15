@@ -20,6 +20,7 @@ long page_size;
 struct health_app *health_sessiond;
 
 struct notification_thread_handle *notification_thread_handle;
+struct registration_thread_handle *registration_thread_handle;
 
 struct lttng_ht *agent_apps_ht_by_sock = NULL;
 

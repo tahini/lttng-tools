@@ -30,7 +30,42 @@ struct thread_state {
 	sem_t ready;
 	bool running;
 	int application_socket;
+	struct registration_thread_handle *handle;
 };
+
+void registration_thread_handle_destroy(
+		struct registration_thread_handle *handle)
+{
+	if (!handle) {
+		goto end;
+	}
+	DBG("[registration-thread] Deleting handle");
+	sem_destroy(&handle->registration_thread_ready);
+
+end:
+	free(handle);
+}
+
+struct registration_thread_handle *registration_thread_handle_create()
+{
+	struct registration_thread_handle *handle;
+
+	DBG("[registration-thread] Creating thread handle");
+
+	handle = zmalloc(sizeof(*handle));
+	if (!handle) {
+		goto end;
+	}
+	/*
+	 * The collectd thread needs the registration thread to be ready before
+	 * launching the collectd daemon, so we use this semaphore as
+	 * a rendez-vous point.
+	 */
+	sem_init(&handle->registration_thread_ready, 0, 0);
+
+end:
+	return handle;
+}
 
 /*
  * Creates the application socket.
@@ -114,6 +149,9 @@ static void cleanup_application_registration_thread(void *data)
 	}
 
 	lttng_pipe_destroy(thread_state->quit_pipe);
+	if (thread_state->handle) {
+		registration_thread_handle_destroy(thread_state->handle);
+	}
 	free(thread_state);
 }
 
@@ -200,7 +238,9 @@ static void *thread_application_registration(void *data)
 	if (testpoint(sessiond_thread_registration_apps)) {
 		goto error_poll_add;
 	}
-
+DBG("Posting semaphor");
+	sem_post(&thread_state->handle->registration_thread_ready);
+DBG("Posted semaphor");
 	while (1) {
 		DBG("Accepting application registration");
 
@@ -377,7 +417,8 @@ static bool shutdown_application_registration_thread(void *data)
 }
 
 struct lttng_thread *launch_application_registration_thread(
-		struct ust_cmd_queue *cmd_queue)
+		struct ust_cmd_queue *cmd_queue,
+		struct registration_thread_handle *handle)
 {
 	int ret;
 	struct lttng_pipe *quit_pipe;
@@ -396,6 +437,7 @@ struct lttng_thread *launch_application_registration_thread(
 	}
 	thread_state->quit_pipe = quit_pipe;
 	thread_state->ust_cmd_queue = cmd_queue;
+	thread_state->handle = handle;
 	application_socket = create_application_socket();
 	if (application_socket < 0) {
 		goto error;
@@ -440,5 +482,6 @@ error:
 		}
 	}
 error_alloc:
+	ERR("[registration-thread] Failed to create UST registration thread");
 	return NULL;
 }

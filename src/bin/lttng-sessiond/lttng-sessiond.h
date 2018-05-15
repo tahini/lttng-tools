@@ -70,6 +70,8 @@ extern struct lttng_kernel_tracer_abi_version kernel_tracer_abi_version;
 
 /* Notification thread handle. */
 extern struct notification_thread_handle *notification_thread_handle;
+/* Registration thread handle. */
+extern struct registration_thread_handle *registration_thread_handle;
 
 /*
  * This contains extra data needed for processing a command received by the

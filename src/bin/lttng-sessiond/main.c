@@ -74,6 +74,7 @@
 #include "register.h"
 #include "manage-apps.h"
 #include "manage-kernel.h"
+#include "collectd-thread.h"
 
 static const char *help_msg =
 #ifdef LTTNG_EMBED_HELP
@@ -1692,9 +1693,18 @@ int main(int argc, char **argv)
 		goto stop_threads;
 	}
 
+	
+	/* collectd thread needs to know when registration thread is ready */
+	registration_thread_handle = registration_thread_handle_create();
+	if (!registration_thread_handle) {
+		retval = -1;
+		ERR("Failed to create registration thread shared data");
+		goto stop_threads;
+	}
 	/* Create thread to manage application registration. */
 	register_apps_thread = launch_application_registration_thread(
-			&ust_cmd_queue);
+			&ust_cmd_queue,
+			registration_thread_handle);
 	if (!register_apps_thread) {
 		retval = -1;
 		goto stop_threads;
@@ -1708,6 +1718,12 @@ int main(int argc, char **argv)
 
 	/* Create thread to manage application notify socket */
 	if (!launch_application_notification_thread(apps_cmd_notify_pipe[0])) {
+		retval = -1;
+		goto stop_threads;
+	}
+
+	/* Create thread for the collectd */
+	if (!launch_collectd_thread(registration_thread_handle)) {
 		retval = -1;
 		goto stop_threads;
 	}
