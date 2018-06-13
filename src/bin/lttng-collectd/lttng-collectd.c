@@ -32,7 +32,8 @@ int lttng_opt_quiet, lttng_opt_verbose, lttng_opt_mi;
  */
 int main(int argc, char **argv)
 {
-	int ret, i, pollfd, fd_w;
+	int ret = 0, retval = 0;
+	int i, pollfd, fd_w;
 	uint32_t revents, nb_fd;
 	struct lttng_poll_event events;
 	char *pipe_path = argv[1];
@@ -41,7 +42,8 @@ int main(int argc, char **argv)
 	fd_w = open(pipe_path, O_WRONLY);
 	if (fd_w < 0) {
 		PERROR("open fifo");
-		return 1;
+		retval = 1;
+		goto exit_open;
 	}
 
 	// TODO: Setup instrumentation here
@@ -52,17 +54,20 @@ int main(int argc, char **argv)
 	ret = write(fd_w, &magic, 1);
 	if (ret != 1) {
 		PERROR("write fifo");
-		return 1;
+		retval = 1;
+		goto exit;
 	}
 
 	ret = lttng_poll_create(&events, 1, LTTNG_CLOEXEC);
 	if (ret < 0) {
-		return 1;
+		retval = 1;
+		goto exit;
 	}
 
 	ret = lttng_poll_add(&events, fd_w, LPOLLIN);
 	if (ret < 0) {
-		return 1;
+		retval = 1;
+		goto exit;
 	}
 
 restart:
@@ -76,7 +81,8 @@ restart:
 				goto restart;
 			}
 			PERROR("poll fifo");
-			return 1;
+			retval = 1;
+			goto exit;
 		}
 
 		nb_fd = ret;
@@ -95,11 +101,15 @@ restart:
 			if (pollfd == fd_w) {
 				if (revents & (LPOLLERR | LPOLLHUP | LPOLLRDHUP)) {
 					ERR("Parent disconnected");
-					return 1;
+					retval = 1;
+					goto exit;
 				}
 			}
 		}
 	}
 
-	return 0;
+exit:
+
+exit_open:
+	return retval;
 }
